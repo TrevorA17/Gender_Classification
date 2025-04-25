@@ -62,23 +62,35 @@ logistic_model <- train(gender ~ .,
 # Print the results of the logistic regression model
 print(logistic_model)
 
-# Train a Random Forest model
+# Train a Random Forest model with fewer trees
 rf_model <- train(gender ~ ., 
                   data = train_data, 
                   method = "rf", 
                   trControl = ctrl, 
-                  metric = "Accuracy")  # Use Accuracy for performance evaluation
+                  metric = "Accuracy", 
+                  tuneGrid = expand.grid(mtry = 2),  # you can specify other mtry values here
+                  ntree = 100)  # Reduce the number of trees
+
 
 # Print the results of the random forest model
 print(rf_model)
 
-# Train a Support Vector Machine model
-svm_model <- train(gender ~ ., 
-                   data = train_data, 
-                   method = "svmRadial",  # Radial basis function kernel
-                   trControl = ctrl, 
-                   metric = "Accuracy")  # Use Accuracy for performance evaluation
+# Load caret package if not already loaded
+library(caret)
 
-# Print the results of the SVM model
-print(svm_model)
+# Compare model performance
+model_results <- resamples(list(
+  Logistic = logistic_model,
+  RandomForest = rf_model
+))
+
+# Summary of the comparison
+summary(model_results)
+
+# Boxplots to visualize accuracy and kappa
+bwplot(model_results, metric = "Accuracy")
+bwplot(model_results, metric = "Kappa")
+
+# Dotplots as alternative visualization
+dotplot(model_results, metric = "Accuracy")
 
