@@ -51,3 +51,24 @@ print(boot_model)
 boot_results <- boot_model$resample
 summary(boot_results)
 
+# Train a logistic regression model
+logistic_model <- train(gender ~ ., 
+                        data = train_data, 
+                        method = "glm", 
+                        family = "binomial", 
+                        trControl = ctrl, 
+                        metric = "Accuracy")  # Use Accuracy as the evaluation metric
+
+# Print the results of the logistic regression model
+print(logistic_model)
+
+# Train a Random Forest model
+rf_model <- train(gender ~ ., 
+                  data = train_data, 
+                  method = "rf", 
+                  trControl = ctrl, 
+                  metric = "Accuracy")  # Use Accuracy for performance evaluation
+
+# Print the results of the random forest model
+print(rf_model)
+
