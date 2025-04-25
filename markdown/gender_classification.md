@@ -19,6 +19,13 @@ Trevor Okinda
 - [Preprocessing & Data
   Transformation](#preprocessing--data-transformation)
   - [Missing Values](#missing-values)
+- [Training Models](#training-models)
+  - [Data Splitting](#data-splitting)
+  - [Bootstrapping](#bootstrapping)
+  - [Training Different Models](#training-different-models)
+  - [Performance Comparison Using
+    Resamples](#performance-comparison-using-resamples)
+  - [Saving Model](#saving-model)
 
 # Student Details
 
@@ -506,3 +513,232 @@ aggr(GenderData, col = c("navyblue", "red"), numbers = TRUE, sortVars = TRUE,
     ##                  lips_thin     0
     ##  distance_nose_to_lip_long     0
     ##                     gender     0
+
+# Training Models
+
+## Data Splitting
+
+``` r
+# Load required library
+library(caret)
+```
+
+    ## Loading required package: lattice
+
+``` r
+# Set seed for reproducibility
+set.seed(123)
+
+# Create a training and testing split (80% train, 20% test)
+splitIndex <- createDataPartition(GenderData$gender, p = 0.8, list = FALSE)
+
+# Create training and testing datasets
+train_data <- GenderData[splitIndex, ]
+test_data  <- GenderData[-splitIndex, ]
+
+# Check the dimensions to confirm
+cat("Training Data Size: ", nrow(train_data), "\n")
+```
+
+    ## Training Data Size:  4001
+
+``` r
+cat("Testing Data Size: ", nrow(test_data), "\n")
+```
+
+    ## Testing Data Size:  1000
+
+## Bootstrapping
+
+``` r
+# Load required library
+library(caret)
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Create bootstrap resampling with 1000 resamples
+ctrl <- trainControl(method = "boot", number = 1000, savePredictions = "final")
+
+# Train a logistic regression model using bootstrapping
+boot_model <- train(gender ~ ., 
+                    data = train_data, 
+                    method = "glm", 
+                    family = "binomial", 
+                    trControl = ctrl, 
+                    metric = "Accuracy")  # Use Accuracy for evaluation
+
+# Print the model results
+print(boot_model)
+```
+
+    ## Generalized Linear Model 
+    ## 
+    ## 4001 samples
+    ##    7 predictor
+    ##    2 classes: 'Female', 'Male' 
+    ## 
+    ## No pre-processing
+    ## Resampling: Bootstrapped (1000 reps) 
+    ## Summary of sample sizes: 4001, 4001, 4001, 4001, 4001, 4001, ... 
+    ## Resampling results:
+    ## 
+    ##   Accuracy   Kappa    
+    ##   0.9652292  0.9304306
+
+``` r
+# Check the resampling results
+boot_results <- boot_model$resample
+summary(boot_results)
+```
+
+    ##     Accuracy          Kappa          Resample        
+    ##  Min.   :0.9517   Min.   :0.9034   Length:1000       
+    ##  1st Qu.:0.9627   1st Qu.:0.9253   Class :character  
+    ##  Median :0.9654   Median :0.9307   Mode  :character  
+    ##  Mean   :0.9652   Mean   :0.9304                     
+    ##  3rd Qu.:0.9679   3rd Qu.:0.9357                     
+    ##  Max.   :0.9778   Max.   :0.9557
+
+## Training Different Models
+
+``` r
+# Train a logistic regression model
+logistic_model <- train(gender ~ ., 
+                        data = train_data, 
+                        method = "glm", 
+                        family = "binomial", 
+                        trControl = ctrl, 
+                        metric = "Accuracy")  # Use Accuracy as the evaluation metric
+
+# Print the results of the logistic regression model
+print(logistic_model)
+```
+
+    ## Generalized Linear Model 
+    ## 
+    ## 4001 samples
+    ##    7 predictor
+    ##    2 classes: 'Female', 'Male' 
+    ## 
+    ## No pre-processing
+    ## Resampling: Bootstrapped (1000 reps) 
+    ## Summary of sample sizes: 4001, 4001, 4001, 4001, 4001, 4001, ... 
+    ## Resampling results:
+    ## 
+    ##   Accuracy   Kappa    
+    ##   0.9653343  0.9306423
+
+``` r
+# Train a Random Forest model with fewer trees
+rf_model <- train(gender ~ ., 
+                  data = train_data, 
+                  method = "rf", 
+                  trControl = ctrl, 
+                  metric = "Accuracy", 
+                  tuneGrid = expand.grid(mtry = 2),  # you can specify other mtry values here
+                  ntree = 100)  # Reduce the number of trees
+
+
+# Print the results of the random forest model
+print(rf_model)
+```
+
+    ## Random Forest 
+    ## 
+    ## 4001 samples
+    ##    7 predictor
+    ##    2 classes: 'Female', 'Male' 
+    ## 
+    ## No pre-processing
+    ## Resampling: Bootstrapped (1000 reps) 
+    ## Summary of sample sizes: 4001, 4001, 4001, 4001, 4001, 4001, ... 
+    ## Resampling results:
+    ## 
+    ##   Accuracy  Kappa    
+    ##   0.970743  0.9414637
+    ## 
+    ## Tuning parameter 'mtry' was held constant at a value of 2
+
+## Performance Comparison Using Resamples
+
+``` r
+# Load caret package if not already loaded
+library(caret)
+
+# Compare model performance
+model_results <- resamples(list(
+  Logistic = logistic_model,
+  RandomForest = rf_model
+))
+
+# Summary of the comparison
+summary(model_results)
+```
+
+    ## 
+    ## Call:
+    ## summary.resamples(object = model_results)
+    ## 
+    ## Models: Logistic, RandomForest 
+    ## Number of resamples: 1000 
+    ## 
+    ## Accuracy 
+    ##                   Min.   1st Qu.    Median      Mean   3rd Qu.      Max. NA's
+    ## Logistic     0.9541029 0.9625237 0.9654354 0.9653343 0.9680761 0.9783345    0
+    ## RandomForest 0.9582210 0.9681572 0.9709303 0.9707430 0.9733970 0.9823370    0
+    ## 
+    ## Kappa 
+    ##                   Min.   1st Qu.    Median      Mean   3rd Qu.      Max. NA's
+    ## Logistic     0.9081034 0.9250292 0.9308695 0.9306423 0.9361427 0.9566692    0
+    ## RandomForest 0.9164226 0.9363063 0.9418397 0.9414637 0.9467768 0.9646739    0
+
+``` r
+# Boxplots to visualize accuracy and kappa
+bwplot(model_results, metric = "Accuracy")
+```
+
+![](gender_classification_files/figure-gfm/resamples-1.png)<!-- -->
+
+``` r
+bwplot(model_results, metric = "Kappa")
+```
+
+![](gender_classification_files/figure-gfm/resamples-2.png)<!-- -->
+
+``` r
+# Dotplots as alternative visualization
+dotplot(model_results, metric = "Accuracy")
+```
+
+![](gender_classification_files/figure-gfm/resamples-3.png)<!-- -->
+
+## Saving Model
+
+``` r
+# Save the best performing model
+saveRDS(rf_model, "models/saved_rf_model.rds")
+
+# Load the saved model
+loaded_rf_model <- readRDS("models/saved_rf_model.rds")
+
+# Example new data for prediction (update with actual values as needed)
+new_data <- data.frame(
+  long_hair = factor(1, levels = levels(GenderData$long_hair)),
+  forehead_width_cm = 13.5,
+  forehead_height_cm = 6.2,
+  nose_wide = factor(0, levels = levels(GenderData$nose_wide)),
+  nose_long = factor(1, levels = levels(GenderData$nose_long)),
+  lips_thin = factor(0, levels = levels(GenderData$lips_thin)),
+  distance_nose_to_lip_long = factor(1, levels = levels(GenderData$distance_nose_to_lip_long))
+)
+
+# Make prediction
+prediction <- predict(loaded_rf_model, newdata = new_data)
+
+# Print prediction
+print(prediction)
+```
+
+    ## [1] Female
+    ## Levels: Female Male
