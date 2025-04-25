@@ -70,6 +70,7 @@ summary(anova_fw)
 anova_fh <- aov(forehead_height_cm ~ gender, data = GenderData)
 summary(anova_fh)
 
+#Plots
 library(ggplot2)
 
 # Bar plots for categorical variables
@@ -93,4 +94,23 @@ ggplot(GenderData, aes(x = forehead_width_cm)) +
 ggplot(GenderData, aes(x = forehead_height_cm)) + 
   geom_histogram(fill = "darkseagreen", bins = 15) + 
   ggtitle("Distribution of Forehead Height (cm)")
+
+
+# Boxplots to compare numeric variables by gender
+ggplot(GenderData, aes(x = gender, y = forehead_width_cm, fill = gender)) + 
+  geom_boxplot() + 
+  ggtitle("Forehead Width by Gender")
+
+ggplot(GenderData, aes(x = gender, y = forehead_height_cm, fill = gender)) + 
+  geom_boxplot() + 
+  ggtitle("Forehead Height by Gender")
+
+# Faceted bar plots for categorical features by gender
+ggplot(GenderData, aes(x = long_hair, fill = gender)) + 
+  geom_bar(position = "dodge") + 
+  ggtitle("Long Hair by Gender")
+
+ggplot(GenderData, aes(x = nose_long, fill = gender)) + 
+  geom_bar(position = "dodge") + 
+  ggtitle("Long Nose by Gender")
 
