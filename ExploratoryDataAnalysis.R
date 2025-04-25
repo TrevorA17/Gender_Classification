@@ -14,3 +14,51 @@ GenderData <- read.csv("data/gender_classification_v7.csv", colClasses = c(
 str(GenderData)
 head(GenderData)
 View(GenderData)
+
+#Measures of Frequency
+# Frequency of categorical variables
+table(GenderData$gender)
+table(GenderData$long_hair)
+table(GenderData$nose_wide)
+table(GenderData$nose_long)
+table(GenderData$lips_thin)
+table(GenderData$distance_nose_to_lip_long)
+
+# Measures of Central Tendency
+# Mean and median
+mean(GenderData$forehead_width_cm)
+median(GenderData$forehead_width_cm)
+
+mean(GenderData$forehead_height_cm)
+median(GenderData$forehead_height_cm)
+
+# Mode function (since base R doesn't have one)
+get_mode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+get_mode(GenderData$forehead_width_cm)
+get_mode(GenderData$forehead_height_cm)
+
+# Measures of Distribution
+# Distribution metrics
+sd(GenderData$forehead_width_cm)
+range(GenderData$forehead_width_cm)
+IQR(GenderData$forehead_width_cm)
+
+sd(GenderData$forehead_height_cm)
+range(GenderData$forehead_height_cm)
+IQR(GenderData$forehead_height_cm)
+
+# Measures of Relationship
+# Correlation between numeric variables
+cor(GenderData$forehead_width_cm, GenderData$forehead_height_cm)
+
+# Chi-square test between categorical variables and gender
+chisq.test(table(GenderData$long_hair, GenderData$gender))
+chisq.test(table(GenderData$nose_wide, GenderData$gender))
+chisq.test(table(GenderData$nose_long, GenderData$gender))
+chisq.test(table(GenderData$lips_thin, GenderData$gender))
+chisq.test(table(GenderData$distance_nose_to_lip_long, GenderData$gender))
+
