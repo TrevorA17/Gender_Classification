@@ -62,3 +62,11 @@ chisq.test(table(GenderData$nose_long, GenderData$gender))
 chisq.test(table(GenderData$lips_thin, GenderData$gender))
 chisq.test(table(GenderData$distance_nose_to_lip_long, GenderData$gender))
 
+# ANOVA for forehead_width_cm by gender
+anova_fw <- aov(forehead_width_cm ~ gender, data = GenderData)
+summary(anova_fw)
+
+# ANOVA for forehead_height_cm by gender
+anova_fh <- aov(forehead_height_cm ~ gender, data = GenderData)
+summary(anova_fh)
+
