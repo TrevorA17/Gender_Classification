@@ -72,3 +72,13 @@ rf_model <- train(gender ~ .,
 # Print the results of the random forest model
 print(rf_model)
 
+# Train a Support Vector Machine model
+svm_model <- train(gender ~ ., 
+                   data = train_data, 
+                   method = "svmRadial",  # Radial basis function kernel
+                   trControl = ctrl, 
+                   metric = "Accuracy")  # Use Accuracy for performance evaluation
+
+# Print the results of the SVM model
+print(svm_model)
+
