@@ -1,0 +1,210 @@
+---
+title: "Gender Classification"
+author: "Trevor Okinda"
+date: "2024"
+output:
+  github_document: 
+    toc: yes
+    toc_depth: 4
+    fig_width: 6
+    fig_height: 4
+    df_print: default
+editor_options:
+  chunk_output_type: console
+---
+
+# Student Details
+
+|                                              |     |
+|----------------------------------------------|-----|
+| **Student ID Number**                        | 134780 |
+| **Student Name**                             | Trevor Okinda |
+| **BBIT 4.2 Group**                           | C |
+| **Project Name**                             | Gender Classification |
+
+# Setup Chunk
+
+**Note:** the following KnitR options have been set as the global defaults: <BR> `knitr::opts_chunk$set(echo = TRUE, warning = FALSE, eval = TRUE, collapse = FALSE, tidy = TRUE)`.
+
+More KnitR options are documented here <https://bookdown.org/yihui/rmarkdown-cookbook/chunk-options.html> and here <https://yihui.org/knitr/options/>.
+
+```{r setup, include=FALSE}
+library(formatR)
+knitr::opts_chunk$set(
+  warning = FALSE,
+  collapse = FALSE
+)
+```
+
+### Source: 
+
+The dataset that was used can be downloaded here: *\<https://www.kaggle.com/datasets/elakiricoder/gender-classification-dataset/data\>*
+
+### Reference:
+
+*\<ElakiriCoder. (2023). Gender Classification Dataset [Data set]. Kaggle. https://www.kaggle.com/datasets/elakiricoder/gender-classification-dataset\>\
+Refer to the APA 7th edition manual for rules on how to cite datasets: <https://apastyle.apa.org/style-grammar-guidelines/references/examples/data-set-references>*
+
+# Understanding the Dataset (Exploratory Data Analysis (EDA))
+## Loading the Dataset
+```{r Load dataset}
+# Load dataset
+GenderData <- read.csv("gender_classification_v7.csv", colClasses = c(
+  long_hair = "factor",
+  forehead_width_cm = "numeric",
+  forehead_height_cm = "numeric",
+  nose_wide = "factor",
+  nose_long = "factor",
+  lips_thin = "factor",
+  distance_nose_to_lip_long = "factor",
+  gender = "factor"
+))
+
+# Preview structure
+str(GenderData)
+head(GenderData)
+View(GenderData)
+```
+
+## Measures of Frequency
+```{r MOF}
+#Measures of Frequency
+# Frequency of categorical variables
+table(GenderData$gender)
+table(GenderData$long_hair)
+table(GenderData$nose_wide)
+table(GenderData$nose_long)
+table(GenderData$lips_thin)
+table(GenderData$distance_nose_to_lip_long)
+```
+
+## Measures of Central Tendency
+```{r MOCT}
+# Measures of Central Tendency
+# Mean and median
+mean(GenderData$forehead_width_cm)
+median(GenderData$forehead_width_cm)
+
+mean(GenderData$forehead_height_cm)
+median(GenderData$forehead_height_cm)
+
+# Mode function (since base R doesn't have one)
+get_mode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+get_mode(GenderData$forehead_width_cm)
+get_mode(GenderData$forehead_height_cm)
+```
+
+## Measures of Distribution
+```{r MOD}
+# Measures of Distribution
+# Distribution metrics
+sd(GenderData$forehead_width_cm)
+range(GenderData$forehead_width_cm)
+IQR(GenderData$forehead_width_cm)
+
+sd(GenderData$forehead_height_cm)
+range(GenderData$forehead_height_cm)
+IQR(GenderData$forehead_height_cm)
+```
+
+## Measures of Relationship
+```{r MOR}
+# Measures of Relationship
+# Correlation between numeric variables
+cor(GenderData$forehead_width_cm, GenderData$forehead_height_cm)
+
+# Chi-square test between categorical variables and gender
+chisq.test(table(GenderData$long_hair, GenderData$gender))
+chisq.test(table(GenderData$nose_wide, GenderData$gender))
+chisq.test(table(GenderData$nose_long, GenderData$gender))
+chisq.test(table(GenderData$lips_thin, GenderData$gender))
+chisq.test(table(GenderData$distance_nose_to_lip_long, GenderData$gender))
+```
+
+## ANOVA
+```{r ANOVA}
+# ANOVA for forehead_width_cm by gender
+anova_fw <- aov(forehead_width_cm ~ gender, data = GenderData)
+summary(anova_fw)
+
+# ANOVA for forehead_height_cm by gender
+anova_fh <- aov(forehead_height_cm ~ gender, data = GenderData)
+summary(anova_fh)
+
+```
+
+## Plots
+```{r Plots}
+#Plots
+library(ggplot2)
+
+# Bar plots for categorical variables
+ggplot(GenderData, aes(x = long_hair)) + 
+  geom_bar(fill = "skyblue") + 
+  ggtitle("Frequency of Long Hair")
+
+ggplot(GenderData, aes(x = nose_wide)) + 
+  geom_bar(fill = "tomato") + 
+  ggtitle("Frequency of Wide Nose")
+
+ggplot(GenderData, aes(x = lips_thin)) + 
+  geom_bar(fill = "plum") + 
+  ggtitle("Frequency of Thin Lips")
+
+# Histograms for numeric variables
+ggplot(GenderData, aes(x = forehead_width_cm)) + 
+  geom_histogram(fill = "steelblue", bins = 15) + 
+  ggtitle("Distribution of Forehead Width (cm)")
+
+ggplot(GenderData, aes(x = forehead_height_cm)) + 
+  geom_histogram(fill = "darkseagreen", bins = 15) + 
+  ggtitle("Distribution of Forehead Height (cm)")
+
+
+# Boxplots to compare numeric variables by gender
+ggplot(GenderData, aes(x = gender, y = forehead_width_cm, fill = gender)) + 
+  geom_boxplot() + 
+  ggtitle("Forehead Width by Gender")
+
+ggplot(GenderData, aes(x = gender, y = forehead_height_cm, fill = gender)) + 
+  geom_boxplot() + 
+  ggtitle("Forehead Height by Gender")
+
+# Faceted bar plots for categorical features by gender
+ggplot(GenderData, aes(x = long_hair, fill = gender)) + 
+  geom_bar(position = "dodge") + 
+  ggtitle("Long Hair by Gender")
+
+ggplot(GenderData, aes(x = nose_long, fill = gender)) + 
+  geom_bar(position = "dodge") + 
+  ggtitle("Long Nose by Gender")
+
+```
+
+# Preprocessing & Data Transformation
+## Missing Values
+```{r Missing Values}
+# Check for any missing values
+anyNA(GenderData)
+
+# Count of missing values per column
+colSums(is.na(GenderData))
+
+# Visual representation (optional)
+library(Amelia)  # for missmap
+missmap(GenderData, main = "Missing Values Map", col = c("yellow", "black"), legend = FALSE)
+
+# Alternative visual with VIM
+# install.packages("VIM") # Uncomment if not installed
+library(VIM)
+aggr(GenderData, col = c("navyblue", "red"), numbers = TRUE, sortVars = TRUE,
+     labels = names(GenderData), cex.axis = .7, gap = 3,
+     ylab = c("Missing Data", "Pattern"))
+
+
+```
+
