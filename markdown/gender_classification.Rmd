@@ -204,7 +204,130 @@ library(VIM)
 aggr(GenderData, col = c("navyblue", "red"), numbers = TRUE, sortVars = TRUE,
      labels = names(GenderData), cex.axis = .7, gap = 3,
      ylab = c("Missing Data", "Pattern"))
+```
 
+# Training Models
+## Data Splitting
+```{r Data Splitting}
+# Load required library
+library(caret)
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Create a training and testing split (80% train, 20% test)
+splitIndex <- createDataPartition(GenderData$gender, p = 0.8, list = FALSE)
+
+# Create training and testing datasets
+train_data <- GenderData[splitIndex, ]
+test_data  <- GenderData[-splitIndex, ]
+
+# Check the dimensions to confirm
+cat("Training Data Size: ", nrow(train_data), "\n")
+cat("Testing Data Size: ", nrow(test_data), "\n")
+```
+
+## Bootstrapping
+```{r Bootstrapping}
+# Load required library
+library(caret)
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Create bootstrap resampling with 1000 resamples
+ctrl <- trainControl(method = "boot", number = 1000, savePredictions = "final")
+
+# Train a logistic regression model using bootstrapping
+boot_model <- train(gender ~ ., 
+                    data = train_data, 
+                    method = "glm", 
+                    family = "binomial", 
+                    trControl = ctrl, 
+                    metric = "Accuracy")  # Use Accuracy for evaluation
+
+# Print the model results
+print(boot_model)
+
+# Check the resampling results
+boot_results <- boot_model$resample
+summary(boot_results)
+```
+
+## Training Different Models
+```{r Training different Models}
+# Train a logistic regression model
+logistic_model <- train(gender ~ ., 
+                        data = train_data, 
+                        method = "glm", 
+                        family = "binomial", 
+                        trControl = ctrl, 
+                        metric = "Accuracy")  # Use Accuracy as the evaluation metric
+
+# Print the results of the logistic regression model
+print(logistic_model)
+
+# Train a Random Forest model with fewer trees
+rf_model <- train(gender ~ ., 
+                  data = train_data, 
+                  method = "rf", 
+                  trControl = ctrl, 
+                  metric = "Accuracy", 
+                  tuneGrid = expand.grid(mtry = 2),  # you can specify other mtry values here
+                  ntree = 100)  # Reduce the number of trees
+
+
+# Print the results of the random forest model
+print(rf_model)
+```
+
+## Performance Comparison Using Resamples
+```{r resamples}
+# Load caret package if not already loaded
+library(caret)
+
+# Compare model performance
+model_results <- resamples(list(
+  Logistic = logistic_model,
+  RandomForest = rf_model
+))
+
+# Summary of the comparison
+summary(model_results)
+
+# Boxplots to visualize accuracy and kappa
+bwplot(model_results, metric = "Accuracy")
+bwplot(model_results, metric = "Kappa")
+
+# Dotplots as alternative visualization
+dotplot(model_results, metric = "Accuracy")
+
+```
+
+## Saving Model
+```{r Saving Model}
+# Save the best performing model
+saveRDS(rf_model, "models/saved_rf_model.rds")
+
+# Load the saved model
+loaded_rf_model <- readRDS("models/saved_rf_model.rds")
+
+# Example new data for prediction (update with actual values as needed)
+new_data <- data.frame(
+  long_hair = factor(1, levels = levels(GenderData$long_hair)),
+  forehead_width_cm = 13.5,
+  forehead_height_cm = 6.2,
+  nose_wide = factor(0, levels = levels(GenderData$nose_wide)),
+  nose_long = factor(1, levels = levels(GenderData$nose_long)),
+  lips_thin = factor(0, levels = levels(GenderData$lips_thin)),
+  distance_nose_to_lip_long = factor(1, levels = levels(GenderData$distance_nose_to_lip_long))
+)
+
+# Make prediction
+prediction <- predict(loaded_rf_model, newdata = new_data)
+
+# Print prediction
+print(prediction)
 
 ```
 
